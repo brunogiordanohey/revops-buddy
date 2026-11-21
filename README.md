@@ -4,7 +4,7 @@ An AI RevOps teammate that joins your Google Meet sales calls, listens to the wh
 
 > RevOps Buddy v1 (2025) was a local push-to-talk prototype (Whisper + Llama on Groq + a CSV). It lives at the [`v1` tag](https://github.com/brunogiordanohey/revops-buddy/tree/v1). In v2 the bot joins real calls and answers to **"Angels"**.
 
-Blog post: [One year later: my voice agent now joins the call](https://www.brugiordano.com/)
+Blog post: [One year later: my voice agent now joins the call](https://www.brugiordano.com/one-year-later-voice-agent-joins-the-call/)
 
 ## How it works
 
