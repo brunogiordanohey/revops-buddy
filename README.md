@@ -1,218 +1,89 @@
-# RevOps Buddy 🎯
+# RevOps Buddy v2
 
-**AI-Powered Sales Pipeline Analytics with Voice Interface**
+An AI RevOps teammate that joins your Google Meet sales calls, listens to the whole conversation, and answers pipeline questions out loud when someone calls it by name: **"Angels, what's left to close Acme?"**
 
-A sophisticated multi-agent AI system for analyzing sales pipeline data through natural language queries. Built with Python, LangChain agents, and voice recognition for hands-free RevOps insights.
+> RevOps Buddy v1 (2025) was a local push-to-talk prototype (Whisper + Llama on Groq + a CSV). It lives at the [`v1` tag](https://github.com/brunogiordanohey/revops-buddy/tree/v1). In v2 the bot joins real calls and answers to **"Angels"**.
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Blog post: [One year later: my voice agent now joins the call](https://www.brugiordano.com/)
 
-## 🎥 Demo
-
-[Video Demo Coming Soon]
-
-## ✨ Key Features
-
-- **🤖 Multi-Agent Architecture**: Specialized agents for analytics, forecasting, comparisons, and drill-downs
-- **🎙️ Voice Interface**: Natural voice interactions with wake-word detection ("Hey Buddy...")
-- **📊 Intelligent Query Routing**: Automatically routes queries to the most appropriate specialized agent
-- **💰 Sales Pipeline Analytics**: Comprehensive analysis of deals, forecasts, and owner performance
-- **🌍 Multi-Region Support**: Built-in support for regional and country-specific analysis
-- **⚡ Fast Inference**: Powered by Groq's lightning-fast LLM infrastructure
-
-## 🏗️ Architecture
-
-RevOps Buddy uses a sophisticated multi-agent system with intelligent query routing:
+## How it works
 
 ```
-User Query
-    ↓
-Query Router (analyzes intent)
-    ↓
-Specialized Agents:
-├── Analytics Agent (totals, counts, breakdowns)
-├── Forecasting Agent (predictions, trends, timeframes)
-├── Comparison Agent (region vs region, owner performance)
-├── Drilldown Agent (detailed analysis, top deals)
-└── General Agent (complex queries requiring multiple tools)
+Google Meet ──audio──▶ MeetingBaas ──WSS, PCM 16 kHz──▶ Deepgram (streaming STT, speaker names)
+                                                              │
+                                     wake word "Angels" ◀─────┤ every sentence → 40-sentence call memory
+                                              │
+                                              ▼
+                       Claude (tools, read-only) ──▶ local CRM snapshot (synced from HubSpot before the call)
+                                              │
+Google Meet ◀──voice── MeetingBaas ◀──WSS── ElevenLabs (TTS)
 ```
 
-### Agent Specialization
+1. **Joining.** `POST /meetings` asks MeetingBaas to send a bot into the call. MeetingBaas opens two WebSockets to this server: one carries the meeting audio in, the other carries the bot's voice out.
+2. **Listening.** Deepgram transcribes in streaming. Every final sentence goes into a memory of the last 40 sentences, with who said it.
+3. **Deciding to speak.** The bot only answers when someone says its name (or a short follow-up from the same person right after it spoke). Everything else stays as context.
+4. **Answering.** Claude gets the question plus the call memory and uses read-only tools (pipeline summary, forecasts, deal lookup…). Totals are computed in code, never by the model. Answers are written for speech: rounded amounts, the important part first.
+5. **Ready before the call.** Before joining, if the last HubSpot sync is older than 5 minutes, it syncs HubSpot into an immutable local snapshot (all pages or none). During the call the tools read that snapshot, so nobody waits on the CRM API. If the sync fails, it keeps the previous snapshot.
+6. **Speaking.** ElevenLabs turns the answer into voice, streamed back into the call. A short "one moment" covers slow answers; saying "stop" cuts it off.
 
-Each agent is optimized for specific query types with curated toolsets:
+Animated explainers: [`docs/animations/`](docs/animations/) (open the HTML files in a browser; add `?lang=en` for English).
 
-- **Analytics Agent**: Fast queries about totals, counts, and basic breakdowns (1 step)
-- **Forecasting Agent**: Time-based predictions and weighted forecasts (2 steps)
-- **Comparison Agent**: Cross-region and owner performance analysis (2 steps)
-- **Drilldown Agent**: Detailed analysis with specific deal information (3 steps)
-- **Voice Agent**: Lightweight subset for fast voice responses (1 step)
+## Quickstart
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.11+
-- Groq API key ([get one here](https://console.groq.com))
-- macOS (for voice features) or any OS for CLI
-
-### Installation
+Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/revops-buddy.git
-cd revops-buddy
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set up your API key
-export GROQ_API_KEY='your-groq-api-key-here'
+uv venv .venv && uv pip install -e '.[dev]'
+cp .env.example .env          # fill in the provider keys
 ```
 
-### Usage
+MeetingBaas must reach this server over public `wss://`, so expose it with a tunnel (e.g. `cloudflared tunnel --url http://localhost:8000`) and put that HTTPS origin in `PUBLIC_BASE_URL`.
 
-**Command Line Mode:**
-```python
-from app.agent_new import run
-
-# Simple analytics
-answer = run("What's the total pipeline in Iberia?")
-print(answer)
-
-# Forecasting
-answer = run("What's the weighted forecast for next quarter?")
-print(answer)
-
-# Comparisons
-answer = run("Compare pipeline between Iberia and Latam")
-print(answer)
-```
-
-**Voice Mode (macOS):**
 ```bash
-python -m app.voice_loop
-# Say: "Buddy, what's the total pipeline?"
+.venv/bin/python -m revops_buddy.server
+curl -X POST http://localhost:8000/meetings \
+  -H 'Content-Type: application/json' \
+  -d '{"meeting_url": "https://meet.google.com/abc-defg-hij", "language": "en"}'
 ```
 
-## 📊 Example Queries
+Admit the bot in Meet and ask: *"Angels, what's our pipeline this quarter?"*
 
-### Analytics
-- "What's the total pipeline in Iberia?"
-- "How many deals are in the Negotiation stage?"
-- "Show me a breakdown by stage"
-- "What's the average ARR?"
+With `DATA_MODE=synthetic` (the default) it answers from a bundled demo company, so you need no CRM. For your own data set `DATA_MODE=live`, a HubSpot private app token with CRM read scopes, and a company config (`COMPANY_CONFIG_PATH`, same shape as `revops_buddy/fixtures/company.json`).
 
-### Forecasting
-- "What's the weighted forecast for this month?"
-- "How many deals are closing within 30 days?"
-- "Show me the rolling 3-month pipeline trend"
+## Configuration
 
-### Comparisons
-- "Compare Iberia vs Latam pipeline"
-- "Who are the top 5 owners by pipeline?"
-- "Show me pipeline by opportunity type"
+| Variable | Required | Purpose |
+|---|---|---|
+| `PUBLIC_BASE_URL` | yes | Public HTTPS origin MeetingBaas connects back to |
+| `MEETINGBAAS_API_KEY` | yes | Sends the bot into the call |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | yes | Answers and tool use (e.g. `claude-haiku-5-5`) |
+| `DEEPGRAM_API_KEY` | yes | Speech to text |
+| `ELEVENLABS_API_KEY`, `TTS_VOICE_ID` | yes | Text to speech (`TTS_VOICE_ID_ES` for Spanish calls) |
+| `DATA_MODE` | no | `synthetic` (default) or `live` |
+| `HUBSPOT_ACCESS_TOKEN`, `COMPANY_CONFIG_PATH` | live mode | CRM sync and field mapping |
+| `DATABASE_URL` | no | Defaults to local SQLite; Postgres URLs work too |
+| `BOT_NAME` | no | The bot's name and wake word (default `Angels`) |
+| `MEETING_LANGUAGE` | no | `en` (default) or `es`; pinned for the whole call |
+| `API_TOKEN` | no | If set, POST routes require `Authorization: Bearer <token>` |
+| `PRESYNC_MAX_AGE_SECONDS` | no | Re-sync HubSpot if the snapshot is older (default 300) |
 
-### Drill-downs
-- "Show me the top 10 deals"
-- "Which deals are in the Procurement/Legal stage?"
-- "What's the pipeline for owner John Smith?"
+`GET /health` shows which providers are configured (booleans only).
 
-## 🛠️ Tech Stack
+## Limits
 
-- **LLM Framework**: [smolagents](https://github.com/huggingface/smolagents) - Lightweight agentic framework
-- **LLM Provider**: [Groq](https://groq.com) - Ultra-fast inference (llama-3.3-70b-versatile)
-- **Speech Recognition**: [faster-whisper](https://github.com/guillaumekln/faster-whisper) - Local STT
-- **Voice Activity Detection**: [webrtcvad](https://github.com/wiseman/py-webrtcvad)
-- **Data Processing**: pandas, numpy
-- **Text-to-Speech**: macOS `say` command (built-in)
+- A prototype: one call at a time, Google Meet only, English and Spanish.
+- Read-only CRM. The private version can also update deals (with spoken confirmation) and post deal links in the meeting chat; those are not included here.
+- Latency from the end of a question to the first spoken word is about 3 seconds, mostly the model.
+- Costs come from MeetingBaas, Deepgram, ElevenLabs and Anthropic usage.
 
-## 📁 Project Structure
+## Tests
 
-```
-revops-buddy/
-├── app/
-│   ├── agents/           # Specialized agent definitions
-│   │   ├── analytics_agent.py
-│   │   ├── forecasting_agent.py
-│   │   ├── comparison_agent.py
-│   │   └── drilldown_agent.py
-│   ├── tools/            # Tool implementations (not included in demo)
-│   ├── util/             # Utility functions (not included in demo)
-│   ├── agent_new.py      # Main agent orchestration
-│   ├── router.py         # Intelligent query routing
-│   └── voice_loop.py     # Voice interface
-├── demo/                 # Simplified demo with mock data
-│   └── demo_agent.py     # Standalone demo script
-├── requirements.txt
-└── README.md
+```bash
+.venv/bin/python -m pytest -q
 ```
 
-## 🎯 Design Decisions
+All tests run offline with fake providers.
 
-### Why Multi-Agent Architecture?
+## License
 
-1. **Performance**: Specialized agents are faster (fewer tools = less token overhead)
-2. **Accuracy**: Domain-specific instructions improve response quality
-3. **Maintainability**: Each agent has clear responsibilities
-4. **Scalability**: Easy to add new specialized agents
-
-### Why Groq?
-
-- **Speed**: 500+ tokens/second inference (critical for voice UX)
-- **Cost**: Competitive pricing for production use
-- **Quality**: Excellent performance with llama-3.3-70b
-
-### Query Routing Strategy
-
-The router uses keyword matching with smart override rules:
-- Fast keyword scoring for initial classification
-- Pattern-based overrides for high-confidence cases
-- Fallback to general agent for ambiguous queries
-
-## 🔐 Security Notes
-
-This repository contains a **simplified demo** version. The production version includes:
-- Proprietary data processing utilities
-- Custom normalization logic for internal data formats
-- Business-specific tool implementations
-- Real sales pipeline data loading
-
-For demo purposes, this repo uses mock data and simplified tools.
-
-## 🚧 Roadmap
-
-- [ ] Web interface (Streamlit/Gradio)
-- [ ] Docker containerization
-- [ ] Extended voice commands
-- [ ] Export to reports/dashboards
-- [ ] Multi-language support
-- [ ] Integration with CRM APIs (Salesforce, HubSpot)
-
-## 📝 License
-
-MIT License - see LICENSE file for details
-
-## 🤝 Contributing
-
-This is a portfolio project, but suggestions and feedback are welcome! Feel free to open issues or submit PRs.
-
-## 👤 Author
-
-**brugiordano**
-- Building AI-powered business intelligence tools
-- Focus: Multi-agent systems, voice interfaces, and LLM applications
-- [https://www.linkedin.com/in/brunogiordano11/](#) | [brugiordano.com](#)
-
-## 🙏 Acknowledgments
-
-- [Groq](https://groq.com) for blazing-fast inference
-- [Hugging Face](https://huggingface.co) for smolagents framework
-- The open-source AI community
-
----
-
-*Built as a proof-of-concept for AI-powered RevOps analytics. Showcasing multi-agent architecture, query routing, and voice interface design.*
+MIT

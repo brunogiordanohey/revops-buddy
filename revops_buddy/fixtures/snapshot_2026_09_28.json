@@ -1,0 +1,60 @@
+{
+  "snapshot_id": "synthetic-northwind-2026-09-28",
+  "synthetic": true,
+  "company_id": "synthetic-northwind",
+  "captured_at": "2026-09-28T08:00:00Z",
+  "source": "synthetic_fixture",
+  "source_updated_at": "2026-09-25T18:10:00Z",
+  "complete": true,
+  "status": "complete",
+  "config_version": "synthetic-v1",
+  "sync": {
+    "run_id": "synthetic-run-20260928",
+    "read_only": true,
+    "status": "complete",
+    "pages": 1
+  },
+  "owners": [
+    {"id": "o-alice", "firstName": "Alice", "lastName": "Ndiaye", "email": "alice@example.test"},
+    {"id": "o-bob", "firstName": "Bob", "lastName": "Lindqvist", "email": "bob@example.test"},
+    {"id": "o-casey", "firstName": "Casey", "lastName": "Silva", "email": "casey@example.test"},
+    {"id": "o-carla", "firstName": "Carla", "lastName": "Rossi", "email": "carla@example.test"}
+  ],
+  "pipelines": [
+    {
+      "id": "default",
+      "label": "Synthetic Sales",
+      "stages": [
+        {"id": "prospect", "label": "Prospecting", "metadata": {"isClosed": false, "probability": "0.20"}},
+        {"id": "qualify", "label": "Qualification", "metadata": {"isClosed": false, "probability": "0.40"}},
+        {"id": "proposal", "label": "Proposal", "metadata": {"isClosed": false, "probability": "0.60"}},
+        {"id": "negotiate", "label": "Negotiation", "metadata": {"isClosed": false, "probability": "0.75"}},
+        {"id": "closedwon", "label": "Closed Won", "metadata": {"isClosed": true, "isWon": true, "probability": "1"}},
+        {"id": "closedlost", "label": "Closed Lost", "metadata": {"isClosed": true, "isWon": false, "probability": "0"}}
+      ]
+    }
+  ],
+  "deals": [
+    {"id": "D-1001", "source": "synthetic_fixture", "properties": {"dealname": "Acme Expansion", "amount": "110000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "proposal", "forecastcategory": "commit", "probability": "0.70", "hubspot_owner_id": "o-alice", "segment": "enterprise", "closedate": "2026-10-15T00:00:00Z", "createdate": "2026-07-02T09:00:00Z", "hs_lastmodifieddate": "2026-09-25T18:10:00Z"}},
+    {"id": "D-1002", "source": "synthetic_fixture", "properties": {"dealname": "Acme Expansion", "amount": "40000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "qualify", "forecastcategory": "pipeline", "probability": "0.40", "hubspot_owner_id": "o-bob", "segment": "midmarket", "closedate": "2026-10-28T00:00:00Z", "createdate": "2026-08-04T10:00:00Z", "hs_lastmodifieddate": "2026-09-23T11:00:00Z"}},
+    {"id": "D-1003", "source": "synthetic_fixture", "properties": {"dealname": "Borealis Platform", "amount": "250000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "negotiate", "forecastcategory": "commit", "probability": "0.80", "hubspot_owner_id": "o-alice", "segment": "enterprise", "closedate": "2026-10-30T00:00:00Z", "createdate": "2026-05-12T08:30:00Z", "hs_lastmodifieddate": "2026-09-24T09:00:00Z"}},
+    {"id": "D-1004", "source": "synthetic_fixture", "properties": {"dealname": "Cedar Renewal", "amount": "180000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "closedwon", "forecastcategory": "closed_won", "probability": "1", "hubspot_owner_id": "o-alice", "segment": "enterprise", "closedate": "2026-09-20T00:00:00Z", "createdate": "2026-03-01T08:00:00Z", "hs_lastmodifieddate": "2026-09-20T16:00:00Z"}},
+    {"id": "D-1005", "source": "synthetic_fixture", "properties": {"dealname": "Driftwave Rollout", "amount": "300000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "proposal", "forecastcategory": "best_case", "probability": "0.60", "hubspot_owner_id": "o-alice", "segment": "enterprise", "closedate": "2026-10-02T00:00:00Z", "createdate": "2026-06-10T10:00:00Z", "hs_lastmodifieddate": "2026-09-21T14:00:00Z"}},
+    {"id": "D-1006", "source": "synthetic_fixture", "properties": {"dealname": "Ember Migration", "amount": "90000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "closedlost", "forecastcategory": "closed_lost", "probability": "0", "hubspot_owner_id": "o-bob", "segment": "commercial", "closedate": "2026-09-15T00:00:00Z", "createdate": "2026-02-14T09:00:00Z", "hs_lastmodifieddate": "2026-09-15T12:00:00Z"}},
+    {"id": "D-1007", "source": "synthetic_fixture", "properties": {"dealname": "Falcon Pilot", "amount": "15000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "prospect", "forecastcategory": "pipeline", "probability": "0.20", "hubspot_owner_id": "o-carla", "segment": "commercial", "closedate": "2026-10-20T00:00:00Z", "createdate": "2026-09-01T08:00:00Z", "hs_lastmodifieddate": "2026-09-18T10:00:00Z"}},
+    {"id": "D-1008", "source": "synthetic_fixture", "properties": {"dealname": "Granite Consolidation", "amount": "65000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "qualify", "forecastcategory": "best_case", "probability": "0.50", "hubspot_owner_id": "o-casey", "segment": "enterprise", "closedate": "2026-10-25T00:00:00Z", "createdate": "2026-08-20T09:30:00Z", "hs_lastmodifieddate": "2026-09-22T08:00:00Z"}},
+    {"id": "D-1009", "source": "synthetic_fixture", "properties": {"dealname": "Harbor Analytics", "amount": "100000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "proposal", "forecastcategory": "commit", "probability": "0.70", "hubspot_owner_id": "o-alice", "segment": "enterprise", "closedate": "2026-10-15T00:00:00Z", "createdate": "2026-07-15T11:00:00Z", "hs_lastmodifieddate": "2026-09-23T16:30:00Z"}},
+    {"id": "D-1010", "source": "synthetic_fixture", "properties": {"dealname": "Ionica Uplift", "amount": "95000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "negotiate", "forecastcategory": "commit", "probability": "0.75", "hubspot_owner_id": "o-casey", "segment": "midmarket", "closedate": "2026-10-12T00:00:00Z", "createdate": "2026-07-25T12:00:00Z", "hs_lastmodifieddate": "2026-09-24T13:00:00Z"}},
+    {"id": "D-1011", "source": "synthetic_fixture", "properties": {"dealname": "Junction Services", "amount": null, "dealcurrency": "EUR", "pipeline": "default", "dealstage": "qualify", "forecastcategory": "pipeline", "probability": "0.30", "hubspot_owner_id": "o-carla", "segment": "commercial", "closedate": "2026-10-18T00:00:00Z", "createdate": "2026-08-30T10:00:00Z", "hs_lastmodifieddate": "2026-09-22T15:00:00Z"}},
+    {"id": "D-1012", "source": "synthetic_fixture", "properties": {"dealname": "Kite Security", "amount": "0", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "proposal", "forecastcategory": "pipeline", "probability": "0.40", "hubspot_owner_id": "o-bob", "segment": "commercial", "closedate": "2026-10-22T00:00:00Z", "createdate": "2026-08-11T09:00:00Z", "hs_lastmodifieddate": "2026-09-19T11:00:00Z"}},
+    {"id": "D-1013", "source": "synthetic_fixture", "properties": {"dealname": "Lumen Migration", "amount": "50000", "dealcurrency": "USD", "pipeline": "default", "dealstage": "proposal", "forecastcategory": "pipeline", "probability": "0.40", "hubspot_owner_id": "o-bob", "segment": "enterprise", "closedate": "2026-10-24T00:00:00Z", "createdate": "2026-07-20T13:00:00Z", "hs_lastmodifieddate": "2026-09-21T09:45:00Z"}},
+    {"id": "D-1014", "source": "synthetic_fixture", "properties": {"dealname": "Mistral Platform", "amount": "220000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "negotiate", "forecastcategory": "best_case", "probability": "0.60", "hubspot_owner_id": "o-bob", "segment": "enterprise", "closedate": "2026-10-29T00:00:00Z", "createdate": "2026-06-01T08:15:00Z", "hs_lastmodifieddate": "2026-09-23T10:00:00Z"}},
+    {"id": "D-1015", "source": "synthetic_fixture", "properties": {"dealname": "Nimbus Expansion", "amount": "70000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "qualify", "forecastcategory": "pipeline", "probability": "0.50", "hubspot_owner_id": "o-casey", "segment": "midmarket", "closedate": "2026-10-03T00:00:00Z", "createdate": "2026-08-07T14:00:00Z", "hs_lastmodifieddate": "2026-09-22T09:00:00Z"}},
+    {"id": "D-1016", "source": "synthetic_fixture", "properties": {"dealname": "Orbit Renewal", "amount": "140000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "qualify", "forecastcategory": "pipeline", "probability": "0.50", "hubspot_owner_id": "o-alice", "segment": "enterprise", "closedate": "2026-10-30T00:00:00Z", "createdate": "2026-07-07T09:45:00Z", "hs_lastmodifieddate": "2026-09-24T11:30:00Z"}},
+    {"id": "D-1017", "source": "synthetic_fixture", "properties": {"dealname": "Pinnacle Migration", "amount": "33000", "dealcurrency": "EUR", "pipeline": "default", "dealstage": "qualify", "forecastcategory": "pipeline", "probability": "0.35", "hubspot_owner_id": "o-carla", "segment": "midmarket", "closedate": "2026-10-10T00:00:00Z", "createdate": "2026-08-17T10:30:00Z", "hs_lastmodifieddate": "2026-09-20T12:00:00Z"}}
+  ],
+  "commitments": [
+    {"id": "C-001", "meeting_series": "Weekly Pipeline Review", "meeting_date": "2026-09-21T08:30:00Z", "deal_id": "D-1003", "text": "Deliver the security review to procurement", "owner_id": "o-alice", "due_date": "2026-09-30T00:00:00Z", "status": "completed", "source": {"type": "synthetic_meeting_record", "uri": "revops_buddy/fixtures/snapshot_2026_09_28.json"}},
+    {"id": "C-002", "meeting_series": "Weekly Pipeline Review", "meeting_date": "2026-09-21T08:30:00Z", "deal_id": "D-1009", "text": "Confirm the procurement path and legal reviewer", "owner_id": "o-alice", "due_date": "2026-10-06T00:00:00Z", "status": "open", "source": {"type": "synthetic_meeting_record", "uri": "revops_buddy/fixtures/snapshot_2026_09_28.json"}}
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "synthetic": true,
+  "description": "Synthetic RevOps dataset for deterministic tests; no real customer or person data",
+  "snapshots": [
+    "snapshot_2026_09_28.json",
+    "snapshot_2026_10_05.json"
+  ],
+  "company_config": {
+    "synthetic": true,
+    "company_id": "synthetic-northwind",
+    "name": "Northwind Synthetic Ltd",
+    "config_version": "synthetic-v1",
+    "reporting_currency": "EUR",
+    "amount_field": "amount",
+    "amount_meaning": "ARR",
+    "currency_field": "dealcurrency",
+    "forecast_category_field": "forecastcategory",
+    "segment_field": "segment",
+    "probability_field": "probability",
+    "timezone": "Europe/Madrid",
+    "fiscal_year_start_month": 2,
+    "treat_missing_currency_as_reporting_currency": true,
+    "pipelines": [
+      {
+        "id": "default",
+        "label": "Synthetic Sales",
+        "stages": {
+          "prospect": {"label": "Prospecting", "status": "open", "forecast_category": "pipeline", "probability": "0.20"},
+          "qualify": {"label": "Qualification", "status": "open", "forecast_category": "pipeline", "probability": "0.40"},
+          "proposal": {"label": "Proposal", "status": "open", "forecast_category": "pipeline", "probability": "0.60"},
+          "negotiate": {"label": "Negotiation", "status": "open", "forecast_category": "best_case", "probability": "0.75"},
+          "closedwon": {"label": "Closed Won", "status": "closed_won", "forecast_category": "closed_won", "probability": "1"},
+          "closedlost": {"label": "Closed Lost", "status": "closed_lost", "forecast_category": "closed_lost", "probability": "0"}
+        }
+      }
+    ],
+    "forecast_categories": {
+      "pipeline": "Early/renewal deals not yet committed by the owner",
+      "best_case": "Plausible upside; not included in commit",
+      "commit": "Owner's explicit commit basis",
+      "closed_won": "Observed closed-won ARR",
+      "closed_lost": "Excluded from forecast upside"
+    },
+    "approved_context": [
+      {
+        "topic": "pipeline",
+        "title": "Open pipeline definition",
+        "definition": "Open pipeline contains deals whose mapped stage is open. Closed-won and closed-lost are excluded unless explicitly requested.",
+        "source": {"type": "company_config", "uri": "revops_buddy/fixtures/company.json", "version": "synthetic-v1"}
+      },
+      {
+        "topic": "forecast",
+        "title": "Forecast bases",
+        "definition": "Category, weighted pipeline, and submitted manager forecasts are distinct bases. Amount × Probability is weighted pipeline, not a submitted forecast.",
+        "source": {"type": "company_config", "uri": "revops_buddy/fixtures/company.json", "version": "synthetic-v1"}
+      },
+      {
+        "topic": "fiscal",
+        "title": "Fiscal calendar",
+        "definition": "The fiscal year starts in February in Europe/Madrid. For example, August-October 2026 is FY2027-Q3 and November 2026-January 2027 is FY2027-Q4.",
+        "source": {"type": "company_config", "uri": "revops_buddy/fixtures/company.json", "version": "synthetic-v1"}
+      },
+      {
+        "topic": "currency",
+        "title": "Reporting currency and missing amounts",
+        "definition": "The only supported reporting currency is EUR. A non-null amount in another currency is rejected until an FX policy is approved. Null amounts remain null and are never treated as zero.",
+        "source": {"type": "company_config", "uri": "revops_buddy/fixtures/company.json", "version": "synthetic-v1"}
+      }
+    ]
+  }
+}

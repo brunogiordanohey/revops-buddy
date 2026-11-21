@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "revops-buddy"
+version = "2.0.0"
+description = "A read-only RevOps voice teammate for Google Meet"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+  "anthropic>=0.40.0",
+  "pipecat-ai[deepgram,elevenlabs]==1.15.0",
+  "elevenlabs>=2",
+  "python-dotenv>=1.0",
+  "fastapi>=0.115.0",
+  "uvicorn>=0.32.0",
+  "httpx>=0.27.0",
+  "sqlalchemy>=2.0.0",
+  "psycopg[binary]>=3.2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0", "pytest-asyncio>=0.26.0", "httpx>=0.27.0"]
+
+[project.scripts]
+revops-buddy = "revops_buddy.server:main"
+
+[tool.setuptools.packages.find]
+include = ["revops_buddy*"]
+
+[tool.setuptools.package-data]
+revops_buddy = ["static/*.png", "fixtures/*.json"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

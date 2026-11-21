@@ -1,0 +1,250 @@
+<title>Angels Pre-call Sync</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: 16:9 stage. Clock strip on top (09:58 → 10:07), HubSpot → snapshot → Claude in the middle, the two goals at the bottom. Same schematic-paper look as animations 1 and 2. */
+:root {
+  --paper: #eef1f5;
+  --ink: #16202e;
+  --muted: #6b7686;
+  --rule: #c9d1dc;
+  --live: #2747d6;
+  --voice: #e0861a;
+  --node: #ffffff;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+html, body { background: var(--paper); color: var(--ink); }
+body { margin: 0; font-family: var(--font-sans); padding-block: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.stage { max-width: 1280px; margin: 0 auto; }
+body.rec { padding: 0; }
+body.rec .stage { max-width: none; width: 1280px; }
+body.rec .controls { display: none; }
+svg { display: block; width: 100%; height: auto; }
+text { font-family: var(--font-sans); fill: var(--ink); }
+.eyebrow { font-family: var(--font-mono); font-size: 13px; letter-spacing: .12em; font-weight: 600; }
+.mono { font-family: var(--font-mono); }
+.tick text { font-family: var(--font-mono); font-size: 13px; text-anchor: middle; fill: var(--muted); }
+.tick .lbl { font-size: 11.5px; }
+.tick.on text { fill: var(--ink); font-weight: 600; }
+.tick circle { fill: var(--paper); stroke: var(--rule); stroke-width: 2; }
+.tick.on circle { fill: var(--live); stroke: var(--live); }
+.node rect.box { fill: var(--node); stroke: var(--rule); stroke-width: 1.5; }
+.node.on rect.box { stroke: var(--live); stroke-width: 2.5; }
+.node .name { font-size: 16px; font-weight: 600; text-anchor: middle; }
+.node .tech { font-family: var(--font-mono); font-size: 11.5px; fill: var(--muted); text-anchor: middle; }
+.wire { fill: none; stroke: var(--rule); stroke-width: 2; }
+.page rect { fill: var(--node); stroke: var(--live); stroke-width: 1.5; }
+.page text { font-family: var(--font-mono); font-size: 11px; text-anchor: middle; fill: var(--live); }
+.note { font-family: var(--font-mono); font-size: 12px; fill: var(--muted); }
+.bubble rect { fill: var(--node); stroke: var(--voice); stroke-width: 2; }
+.bubble text { font-size: 14px; }
+.stamp rect { fill: var(--live); }
+.stamp text { font-family: var(--font-mono); font-size: 12px; fill: #ffffff; font-weight: 600; text-anchor: middle; }
+.goal text { font-size: 15px; }
+.goal .num { font-family: var(--font-mono); font-size: 13px; font-weight: 600; fill: var(--muted); }
+.goal .hd { font-weight: 600; }
+.goal.on .num { fill: var(--live); }
+.goal rect { fill: none; stroke: var(--rule); stroke-width: 1.5; }
+.goal.on rect { stroke: var(--live); stroke-width: 2; fill: var(--node); }
+.controls { display: flex; justify-content: flex-end; margin-top: 10px; }
+.controls button { font: 13px var(--font-mono); color: var(--ink); background: var(--node); border: 1px solid var(--rule); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.controls button:focus-visible { outline: 2px solid var(--live); outline-offset: 2px; }
+</style>
+
+<div class="stage">
+<svg id="s" viewBox="0 0 1280 720" role="img" aria-labelledby="svgTitle">
+  <title id="svgTitle"></title>
+  <text x="40" y="52" class="eyebrow" fill="#6b7686" data-i="eyebrow"></text>
+  <line x1="40" x2="1240" y1="70" y2="70" stroke="#c9d1dc" />
+
+  <!-- clock strip -->
+  <line x1="120" x2="1160" y1="122" y2="122" stroke="#c9d1dc" stroke-width="2" />
+  <line id="progress" x1="120" x2="120" y1="122" y2="122" stroke="#2747d6" stroke-width="3" />
+  <g id="ticks"></g>
+
+  <!-- main -->
+  <path class="wire" d="M 250 340 L 530 340" />
+  <path class="wire" d="M 760 340 L 960 340" />
+  <path class="wire" d="M 1060 238 L 1060 300" />
+
+  <g class="node" id="nHub" transform="translate(60 300)"><rect class="box" width="190" height="80" rx="8"/>
+    <text class="name" x="95" y="36">HubSpot</text><text class="tech" x="95" y="58" data-i="hubTech"></text></g>
+  <g class="node" id="nSnap" transform="translate(530 300)"><rect class="box" width="230" height="80" rx="8"/>
+    <text class="name" x="115" y="36" data-i="snap"></text><text class="tech" x="115" y="58" id="snapTech"></text></g>
+  <g class="stamp" id="stamp" opacity="0" transform="translate(575 392)"><rect width="140" height="24" rx="4"/><text x="70" y="16" data-i="stamp"></text></g>
+  <g class="node" id="nClaude" transform="translate(960 300)"><rect class="box" width="200" height="80" rx="8"/>
+    <text class="name" x="100" y="36">Claude</text><text class="tech" x="100" y="58" data-i="claudeTech"></text></g>
+  <g class="node" id="nMeet" transform="translate(960 178)"><rect class="box" width="200" height="60" rx="8"/>
+    <text class="name" x="100" y="28">Google Meet</text><text class="tech" x="100" y="47" data-i="meetTech"></text></g>
+
+  <!-- gate under the sync wire -->
+  <g id="gate" opacity="0">
+    <text x="390" y="400" class="note" text-anchor="middle" data-i="gate1"></text>
+    <text x="390" y="420" class="note" text-anchor="middle" style="fill:#2747d6" data-i="gate2"></text>
+  </g>
+  <text id="allOrNothing" x="390" y="296" class="note" text-anchor="middle" data-i="allOrNothing" opacity="0"></text>
+  <text id="toolNote" x="860" y="296" class="note" text-anchor="middle" opacity="0">get_deal("Acme")</text>
+  <text id="localNote" x="860" y="400" class="note" text-anchor="middle" style="fill:#2747d6" data-i="localNote" opacity="0"></text>
+
+  <g id="pages"></g>
+  <circle id="pk" r="6" fill="#e0861a" opacity="0"/>
+  <circle id="pk2" r="6" fill="#2747d6" opacity="0"/>
+
+  <g class="bubble" id="qBubble" opacity="0" transform="translate(600 190)"><rect width="10" height="36" rx="8"/><text x="12" y="23" data-i="question"></text></g>
+  <g class="bubble" id="aBubble" opacity="0" transform="translate(600 452)"><rect width="10" height="36" rx="8"/><text x="12" y="23" id="aText"></text></g>
+
+  <!-- goals -->
+  <g class="goal" id="g1" transform="translate(40 540)"><rect width="590" height="110" rx="10"/>
+    <text x="20" y="34" class="num">1</text><text x="44" y="34" class="hd" data-i="g1h"></text>
+    <text x="44" y="62" data-i="g1a"></text><text x="44" y="84" data-i="g1b"></text></g>
+  <g class="goal" id="g2" transform="translate(650 540)"><rect width="590" height="110" rx="10"/>
+    <text x="20" y="34" class="num">2</text><text x="44" y="34" class="hd" data-i="g2h"></text>
+    <text x="44" y="62" data-i="g2a"></text><text x="44" y="84" data-i="g2b"></text></g>
+</svg>
+<div class="controls"><button id="play" type="button"></button></div>
+</div>
+
+<script>
+(function () {
+  const T = {
+    es: {
+      title: "Angels: preparado antes de la llamada",
+      eyebrow: "ANGELS · ANTES DE ENTRAR",
+      ticks: [["09:58", "llamada a punto"], ["09:59", "sincroniza"], ["10:00", "entra"], ["10:07", "pregunta"]],
+      hubTech: "API · páginas de 100",
+      snap: "Copia del CRM", snapEmpty: "Postgres · vacía", snapFill: "Postgres · guardando", snapDone: "Postgres · lista",
+      stamp: "09:59 · completa",
+      claudeTech: "tools sobre la copia",
+      meetTech: "pipeline review",
+      gate1: "¿última sync hace más de 5 min?",
+      gate2: "sí → sincroniza antes de entrar",
+      allOrNothing: "todas las páginas o ninguna",
+      localNote: "lectura local, sin llamar a HubSpot",
+      question: "“Angels, ¿cuánto vale Acme?”",
+      answer: "“48.000 €, en negociación.”",
+      answerSrc: "  · HubSpot, 09:59",
+      pages: ["owners", "deals 1–100", "deals 101–200", "deals 201–240"],
+      g1h: "Rápido", g1a: "Durante la llamada las tools leen la copia local.", g1b: "No hay que esperar a la API de HubSpot a mitad de frase.",
+      g2h: "Lo último", g2a: "Se sincroniza justo antes de cada llamada.", g2b: "Si falla, sigue con la copia anterior."
+    },
+    en: {
+      title: "Angels: ready before the call",
+      eyebrow: "ANGELS · BEFORE IT JOINS",
+      ticks: [["09:58", "call coming up"], ["09:59", "syncs"], ["10:00", "joins"], ["10:07", "question"]],
+      hubTech: "API · pages of 100",
+      snap: "CRM copy", snapEmpty: "Postgres · empty", snapFill: "Postgres · saving", snapDone: "Postgres · ready",
+      stamp: "09:59 · complete",
+      claudeTech: "tools over the copy",
+      meetTech: "pipeline review",
+      gate1: "last sync more than 5 min ago?",
+      gate2: "yes → sync before joining",
+      allOrNothing: "every page or none",
+      localNote: "local read, no HubSpot call",
+      question: "“Angels, how much is Acme worth?”",
+      answer: "“€48,000, in negotiation.”",
+      answerSrc: "  · HubSpot, 09:59",
+      pages: ["owners", "deals 1–100", "deals 101–200", "deals 201–240"],
+      g1h: "Fast", g1a: "During the call the tools read the local copy.", g1b: "No waiting on HubSpot's API mid-sentence.",
+      g2h: "The latest", g2a: "It syncs right before every call.", g2b: "If that fails, it keeps the last copy."
+    }
+  };
+  const qs = new URLSearchParams(location.search);
+  const lang = qs.get("lang") === "en" ? "en" : "es";
+  const L = T[lang];
+  if (qs.has("rec")) document.body.classList.add("rec");
+  const LOOP = 16;
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, attrs, parent, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; };
+  const within = (t, a, b) => t >= a && t < b;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const prog = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+  const ease = (p) => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+
+  document.querySelectorAll("[data-i]").forEach((n) => { n.textContent = L[n.dataset.i]; });
+  $("svgTitle").textContent = L.title;
+  const sizeBubble = (g) => { try { g.querySelector("rect").setAttribute("width", g.querySelector("text").getComputedTextLength() + 24); } catch (e) {} };
+
+  // ticks: positions on the strip; times when each becomes active
+  const tickX = [120, 467, 813, 1160], tickT = [0, 1.0, 5.6, 7.2];
+  const ticks = L.ticks.map(([hh, lbl], i) => {
+    const g = el("g", { class: "tick", transform: `translate(${tickX[i]} 122)` }, $("ticks"));
+    el("circle", { r: 7 }, g); el("text", { y: -16 }, g, hh); el("text", { class: "lbl", y: 30 }, g, lbl);
+    return g;
+  });
+
+  const pages = L.pages.map((p) => { const g = el("g", { class: "page", opacity: 0 }, $("pages")); el("rect", { x: -52, y: -13, width: 104, height: 26, rx: 4 }, g); el("text", { y: 4 }, g, p); return g; });
+  const pageStart = [1.8, 2.4, 3.0, 3.6], travel = 1.0;
+
+  function render(t) {
+    // clock strip
+    let active = 0; tickT.forEach((s, i) => { if (t >= s) active = i; });
+    ticks.forEach((g, i) => g.classList.toggle("on", i <= active));
+    let px = tickX[active];
+    if (active < 3) { const nextT = tickT[active + 1]; px = tickX[active] + (tickX[active + 1] - tickX[active]) * ease(prog(t, nextT - 0.5, nextT)); }
+    $("progress").setAttribute("x2", px);
+
+    // sync phase
+    $("gate").setAttribute("opacity", within(t, 1.0, 5.2) ? 1 : 0);
+    $("allOrNothing").setAttribute("opacity", within(t, 1.8, 5.2) ? 1 : 0);
+    $("nHub").classList.toggle("on", within(t, 1.6, 4.8));
+    let arrived = 0;
+    pages.forEach((g, i) => {
+      const a = pageStart[i];
+      if (within(t, a, a + travel)) {
+        const p = ease(prog(t, a, a + travel));
+        g.setAttribute("transform", `translate(${305 + p * 170} ${340 - Math.sin(p * Math.PI) * 26})`);
+        g.setAttribute("opacity", 1);
+      } else g.setAttribute("opacity", 0);
+      if (t >= a + travel) arrived++;
+    });
+    const done = t >= 4.9;
+    $("nSnap").classList.toggle("on", within(t, 1.8, 5.4) || within(t, 9.1, 9.9));
+    $("snapTech").textContent = done ? L.snapDone : (t >= 2.8 ? `${L.snapFill} ${arrived}/4` : L.snapEmpty);
+    $("stamp").setAttribute("opacity", done ? 1 : 0);
+    $("g2").classList.toggle("on", within(t, 4.9, LOOP));
+
+    // call phase
+    $("nMeet").classList.toggle("on", t >= 5.6);
+    const q = $("qBubble"); q.setAttribute("opacity", within(t, 7.3, 15.6) ? 1 : 0); sizeBubble(q);
+    const pk = $("pk"), pk2 = $("pk2");
+    if (within(t, 8.0, 8.5)) { const p = ease(prog(t, 8.0, 8.5)); pk.setAttribute("cx", 1060); pk.setAttribute("cy", 238 + p * 62); pk.setAttribute("opacity", 1); } else pk.setAttribute("opacity", 0);
+    $("nClaude").classList.toggle("on", within(t, 8.4, 10.6));
+    if (within(t, 8.7, 9.2)) { const p = ease(prog(t, 8.7, 9.2)); pk2.setAttribute("cx", 960 - p * 200); pk2.setAttribute("cy", 340); pk2.setAttribute("opacity", 1); }
+    else if (within(t, 9.3, 9.8)) { const p = ease(prog(t, 9.3, 9.8)); pk2.setAttribute("cx", 760 + p * 200); pk2.setAttribute("cy", 340); pk2.setAttribute("opacity", 1); }
+    else pk2.setAttribute("opacity", 0);
+    $("toolNote").setAttribute("opacity", within(t, 8.6, 10.4) ? 1 : 0);
+    $("localNote").setAttribute("opacity", within(t, 8.6, 15.6) ? 1 : 0);
+
+    const a = $("aBubble"), at = $("aText");
+    while (at.firstChild) at.removeChild(at.firstChild);
+    if (within(t, 10.2, 15.6)) {
+      el("tspan", {}, at, L.answer);
+      el("tspan", { style: "fill:#2747d6;font-family:var(--font-mono);font-size:12px" }, at, L.answerSrc);
+      a.setAttribute("opacity", 1); sizeBubble(a);
+      try { const w = at.getComputedTextLength() + 24; a.setAttribute("transform", `translate(${1160 - w} 452)`); } catch (e) {}
+    } else a.setAttribute("opacity", 0);
+    $("g1").classList.toggle("on", within(t, 10.2, LOOP));
+    // question bubble sits left of Meet
+    try { const w = q.querySelector("text").getComputedTextLength() + 24; q.setAttribute("transform", `translate(${945 - w} 190)`); } catch (e) {}
+  }
+
+  let t = qs.has("t") ? parseFloat(qs.get("t")) : 0;
+  let playing = !qs.has("t") && !qs.has("rec");
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches && !qs.has("t")) { t = 12; playing = false; }
+  const btn = $("play");
+  const btnLabel = () => { btn.textContent = playing ? (lang === "es" ? "■ Detener" : "■ Stop") : (lang === "es" ? "▶ Reproducir" : "▶ Play"); };
+  btn.addEventListener("click", () => { playing = !playing; btnLabel(); });
+  let last = null;
+  function tick(now) { if (playing) { if (last != null) t = (t + (now - last) / 1000) % LOOP; render(t); } last = now; requestAnimationFrame(tick); }
+  window.__seek = (x) => { t = x; render(t); };
+  window.__LOOP = LOOP;
+  btnLabel();
+  const start = () => { render(t); requestAnimationFrame(tick); };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(start); else start();
+})();
+</script>

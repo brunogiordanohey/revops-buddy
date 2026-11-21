@@ -1,0 +1,301 @@
+<title>Angels Call Memory</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: 16:9 stage. Left: the call (4 tiles + live caption). Right: what Angels keeps (transcript window) and what goes to Claude. Same schematic-paper look as animation 1. */
+:root {
+  --paper: #eef1f5;
+  --ink: #16202e;
+  --muted: #6b7686;
+  --rule: #c9d1dc;
+  --live: #2747d6;   /* CRM / data */
+  --voice: #e0861a;  /* speech / call context */
+  --node: #ffffff;
+  --tile: #dfe4eb;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+html, body { background: var(--paper); color: var(--ink); }
+body { margin: 0; font-family: var(--font-sans); padding-block: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.stage { max-width: 1280px; margin: 0 auto; }
+body.rec { padding: 0; }
+body.rec .stage { max-width: none; width: 1280px; }
+body.rec .controls { display: none; }
+svg { display: block; width: 100%; height: auto; }
+text { font-family: var(--font-sans); fill: var(--ink); }
+.eyebrow { font-family: var(--font-mono); font-size: 13px; letter-spacing: .12em; font-weight: 600; }
+.tile rect.bg { fill: var(--tile); stroke: transparent; stroke-width: 4; }
+.tile.talk rect.bg { stroke: var(--voice); }
+.tile .avatar { fill: var(--node); }
+.tile .initial { font-size: 28px; font-weight: 600; text-anchor: middle; fill: var(--muted); }
+.tile .nm { font-size: 14px; font-weight: 600; }
+.tile .role { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+.tile.bot rect.bg { fill: var(--ink); }
+.tile.bot .nm { fill: var(--paper); }
+.tile.bot .role { fill: #9aa6b8; }
+.cap text { font-size: 15px; }
+.cap .who { font-weight: 700; }
+.c-call { fill: var(--voice); font-weight: 600; }
+.c-crm { fill: var(--live); font-weight: 600; }
+.mem .line text { font-family: var(--font-mono); font-size: 12.5px; }
+.mem .line .who { font-weight: 600; }
+.mem .line rect.row { fill: var(--node); stroke: var(--rule); stroke-width: 1; }
+.mem .line.sent rect.row { stroke: var(--voice); stroke-width: 2; }
+.pill rect { fill: var(--paper); }
+.pill text { font-family: var(--font-mono); font-size: 10.5px; fill: var(--muted); letter-spacing: .04em; }
+.pill.yes rect { fill: var(--voice); }
+.pill.yes text { fill: #ffffff; font-weight: 600; }
+.box rect { fill: var(--node); stroke: var(--rule); stroke-width: 1.5; }
+.box.on rect { stroke: var(--live); stroke-width: 2.5; }
+.box .name { font-size: 15px; font-weight: 600; text-anchor: middle; }
+.box .tech { font-family: var(--font-mono); font-size: 11.5px; fill: var(--muted); text-anchor: middle; }
+.note { font-family: var(--font-mono); font-size: 12px; fill: var(--muted); }
+.wire { fill: none; stroke: var(--rule); stroke-width: 2; stroke-dasharray: 4 5; }
+.controls { display: flex; justify-content: flex-end; margin-top: 10px; }
+.controls button { font: 13px var(--font-mono); color: var(--ink); background: var(--node); border: 1px solid var(--rule); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.controls button:focus-visible { outline: 2px solid var(--live); outline-offset: 2px; }
+</style>
+
+<div class="stage">
+<svg id="s" viewBox="0 0 1280 720" role="img" aria-labelledby="svgTitle">
+  <title id="svgTitle"></title>
+  <text x="40" y="52" class="eyebrow" fill="#6b7686" data-i="eyebrow"></text>
+  <text x="1240" y="52" class="eyebrow" text-anchor="end" fill="#6b7686" id="clock">10:02</text>
+  <line x1="40" x2="1240" y1="70" y2="70" stroke="#c9d1dc" />
+
+  <!-- LEFT: the call -->
+  <text x="40" y="104" class="eyebrow" fill="#e0861a" data-i="callEyebrow"></text>
+  <g id="tiles"></g>
+  <g class="cap" transform="translate(40 556)">
+    <rect width="620" height="64" rx="8" fill="#16202e"/>
+    <text id="cap1" x="16" y="26" style="fill:#eef1f5"></text>
+    <text id="cap2" x="16" y="50" style="fill:#eef1f5"></text>
+  </g>
+
+  <!-- RIGHT: what Angels keeps -->
+  <text x="700" y="104" class="eyebrow" fill="#2747d6" data-i="memEyebrow"></text>
+  <text x="1240" y="104" class="note" text-anchor="end" data-i="memNote"></text>
+  <g class="mem" id="mem"></g>
+
+  <path id="wSend" class="wire" d="M 960 366 L 960 470" />
+  <g class="box" id="bClaude" transform="translate(880 470)"><rect width="160" height="64" rx="8"/>
+    <text class="name" x="80" y="28">Claude</text><text class="tech" x="80" y="48" data-i="claudeTech"></text></g>
+  <path class="wire" d="M 1040 502 L 1090 502" />
+  <g class="box" id="bHub" transform="translate(1090 482)"><rect width="150" height="40" rx="6"/>
+    <text class="tech" x="75" y="25" style="fill:#16202e">HubSpot · get_deal</text></g>
+  <g id="gate" transform="translate(700 470)">
+    <text x="0" y="18" class="note" data-i="gateQ"></text>
+    <g class="pill" id="gatePill" transform="translate(0 30)"><rect width="10" height="22" rx="11"/><text x="10" y="15"></text></g>
+  </g>
+  <circle id="pk" r="6" fill="#e0861a" opacity="0"/>
+  <circle id="pk2" r="6" fill="#2747d6" opacity="0"/>
+
+  <!-- legend / thesis -->
+  <line x1="40" x2="1240" y1="644" y2="644" stroke="#c9d1dc" />
+  <circle cx="48" cy="672" r="5" fill="#e0861a"/><text x="60" y="676" class="note" data-i="legCall"></text>
+  <circle cx="330" cy="672" r="5" fill="#2747d6"/><text x="342" y="676" class="note" data-i="legCrm"></text>
+  <text x="1240" y="676" class="note" text-anchor="end" style="fill:#16202e" data-i="thesis"></text>
+</svg>
+<div class="controls"><button id="play" type="button"></button></div>
+</div>
+
+<script>
+(function () {
+  // Script of the call. t = seconds into the loop.
+  const T = {
+    es: {
+      title: "Angels: la memoria de la llamada",
+      eyebrow: "ANGELS · ESTUVO ALLÍ",
+      callEyebrow: "PIPELINE REVIEW · EN DIRECTO",
+      memEyebrow: "LO QUE ANGELS GUARDA",
+      memNote: "últimas 40 frases, con quién habló",
+      claudeTech: "pregunta + ventana",
+      gateQ: "¿Le han llamado?",
+      no: "no · solo escucha", yes: "sí · “Angels”",
+      legCall: "lo dijo alguien en la llamada", legCrm: "lo dice el CRM",
+      thesis: "No le repites el contexto: lo ha oído.",
+      lines: [
+        { t: 0.6, who: "Laura", text: "Vamos con Acme. Marc, ¿cómo va?" },
+        { t: 2.6, who: "Marc", text: "Bien, pero piden otra demo antes de firmar." },
+        { t: 4.8, who: "Sofía", text: "Y legal aún no ha devuelto el contrato." },
+        { t: 7.0, who: "Laura", text: "Angels, ¿qué nos falta para cerrar Acme?", wake: true },
+      ],
+      answer: [
+        [{ s: "Angels: ", who: 1 }, { s: "Marc dice que " }, { s: "piden otra demo", c: "c-call" }, { s: " y Sofía, que " }, { s: "legal no ha devuelto el contrato", c: "c-call" }, { s: "." }],
+        [{ s: "En HubSpot: " }, { s: "negociación, 48.000 €, cierre el 15 de diciembre", c: "c-crm" }, { s: "." }]
+      ],
+      roles: { Laura: "Head of Sales", Marc: "Account Executive", "Sofía": "Account Executive", Angels: "RevOps · bot" }
+    },
+    en: {
+      title: "Angels: the call's memory",
+      eyebrow: "ANGELS · IT WAS THERE",
+      callEyebrow: "PIPELINE REVIEW · LIVE",
+      memEyebrow: "WHAT ANGELS KEEPS",
+      memNote: "last 40 sentences, with who said them",
+      claudeTech: "question + window",
+      gateQ: "Was it called on?",
+      no: "no · just listens", yes: "yes · “Angels”",
+      legCall: "someone said it on the call", legCrm: "the CRM says it",
+      thesis: "You don't repeat the context: it heard it.",
+      lines: [
+        { t: 0.6, who: "Laura", text: "Let's do Acme. Marc, how's it going?" },
+        { t: 2.6, who: "Marc", text: "Good, but they want another demo before signing." },
+        { t: 4.8, who: "Sofía", text: "And legal still hasn't sent the contract back." },
+        { t: 7.0, who: "Laura", text: "Angels, what's left to close Acme?", wake: true },
+      ],
+      answer: [
+        [{ s: "Angels: ", who: 1 }, { s: "Marc says " }, { s: "they want another demo", c: "c-call" }, { s: " and Sofía says " }, { s: "legal hasn't returned the contract", c: "c-call" }, { s: "." }],
+        [{ s: "In HubSpot: " }, { s: "negotiation, €48,000, closing December 15", c: "c-crm" }, { s: "." }]
+      ],
+      roles: { Laura: "Head of Sales", Marc: "Account Executive", "Sofía": "Account Executive", Angels: "RevOps · bot" }
+    }
+  };
+  const qs = new URLSearchParams(location.search);
+  const lang = qs.get("lang") === "en" ? "en" : "es";
+  const L = T[lang];
+  if (qs.has("rec")) document.body.classList.add("rec");
+  const LOOP = 17.5;
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, attrs, parent, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; };
+  const within = (t, a, b) => t >= a && t < b;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const prog = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+  const ease = (p) => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+
+  document.querySelectorAll("[data-i]").forEach((n) => { n.textContent = L[n.dataset.i]; });
+  $("svgTitle").textContent = L.title;
+
+  // tiles 2x2
+  const people = ["Laura", "Marc", "Sofía", "Angels"];
+  const tiles = {};
+  people.forEach((p, i) => {
+    const x = 40 + (i % 2) * 320, y = 120 + Math.floor(i / 2) * 214;
+    const g = el("g", { class: "tile" + (p === "Angels" ? " bot" : ""), transform: `translate(${x} ${y})` }, $("tiles"));
+    el("rect", { class: "bg", width: 300, height: 200, rx: 10 }, g);
+    if (p === "Angels") {
+      // simple mark: concentric arcs = listening
+      el("circle", { cx: 150, cy: 88, r: 30, fill: "none", stroke: "#e0861a", "stroke-width": 3 }, g);
+      el("circle", { cx: 150, cy: 88, r: 10, fill: "#e0861a" }, g);
+      g.ring = el("circle", { cx: 150, cy: 88, r: 30, fill: "none", stroke: "#e0861a", "stroke-width": 2, opacity: 0 }, g);
+    } else {
+      el("circle", { class: "avatar", cx: 150, cy: 88, r: 38 }, g);
+      el("text", { class: "initial", x: 150, y: 98 }, g, p[0]);
+    }
+    el("text", { class: "nm", x: 14, y: 176 }, g, p);
+    el("text", { class: "role", x: 286, y: 176, "text-anchor": "end" }, g, L.roles[p]);
+    tiles[p] = g;
+  });
+
+  // memory rows
+  const rows = L.lines.map((ln, i) => {
+    const y = 120 + i * 62;
+    const g = el("g", { class: "line", transform: `translate(700 ${y})`, opacity: 0 }, $("mem"));
+    el("rect", { class: "row", width: 540, height: 50, rx: 6 }, g);
+    const tx = el("text", { x: 12, y: 30 }, g);
+    el("tspan", { class: "who" }, tx, ln.who + ": ");
+    if (ln.wake) {
+      const [a, ...rest] = ln.text.split(",");
+      el("tspan", { class: "c-call" }, tx, a); el("tspan", {}, tx, "," + rest.join(","));
+    } else el("tspan", {}, tx, ln.text);
+    const pill = el("g", { class: "pill", transform: "translate(0 -9)" }, g);
+    el("rect", { width: 10, height: 18, rx: 9 }, pill);
+    el("text", { x: 8, y: 13 }, pill, "");
+    g.pill = pill; return g;
+  });
+  function setPill(pill, text, yes, anchorRight) {
+    pill.classList.toggle("yes", !!yes);
+    const t = pill.querySelector("text"); t.textContent = text;
+    let w = 60; try { w = t.getComputedTextLength() + 16; } catch (e) {}
+    pill.querySelector("rect").setAttribute("width", w);
+    if (anchorRight != null) pill.setAttribute("transform", `translate(${anchorRight - w} -9)`);
+  }
+  const ctxLabel = lang === "es" ? "contexto" : "context";
+  const sentLabel = lang === "es" ? "→ Claude" : "→ Claude";
+
+  function caption(t) {
+    const c1 = $("cap1"), c2 = $("cap2");
+    [c1, c2].forEach((c) => { while (c.firstChild) c.removeChild(c.firstChild); });
+    if (t >= 10.4 && t < 16.8) {
+      // Angels answer types in
+      let n = Math.floor((t - 10.4) * 34);
+      L.answer.forEach((line, li) => {
+        const target = li === 0 ? c1 : c2;
+        for (const part of line) {
+          if (n <= 0) break;
+          const ts = el("tspan", {}, target, part.s.slice(0, n));
+          if (part.c) ts.setAttribute("class", part.c);
+          if (part.who) ts.setAttribute("class", "who");
+          ts.style.fill = part.c ? "" : "#eef1f5";
+          if (part.c === "c-call") ts.style.fill = "#f3a64a";
+          if (part.c === "c-crm") ts.style.fill = "#8ea2ff";
+          n -= part.s.length;
+        }
+      });
+      return;
+    }
+    let cur = null;
+    for (const ln of L.lines) if (t >= ln.t) cur = ln;
+    if (!cur || t > cur.t + 2.6) return;
+    el("tspan", { class: "who" }, c1, cur.who + ": ");
+    el("tspan", {}, c1, cur.text.slice(0, Math.floor((t - cur.t) * 40)));
+  }
+
+  function render(t) {
+    const mins = 2 + Math.floor(t / 6);
+    $("clock").textContent = "10:" + String(mins).padStart(2, "0");
+    // who talks
+    let talking = null;
+    for (const ln of L.lines) if (within(t, ln.t, ln.t + 1.9)) talking = ln.who;
+    if (within(t, 10.4, 15.2)) talking = "Angels";
+    people.forEach((p) => tiles[p].classList.toggle("talk", talking === p));
+    const ring = tiles.Angels.ring;
+    if (talking === "Angels") { const ph = (t * 1.4) % 1; ring.setAttribute("r", 30 + ph * 40); ring.setAttribute("opacity", 1 - ph); } else ring.setAttribute("opacity", 0);
+
+    caption(t);
+
+    // memory rows appear when the sentence is final (~1.6 s after it starts)
+    const sending = within(t, 8.8, 16.8);
+    rows.forEach((g, i) => {
+      const ln = L.lines[i];
+      const show = t >= ln.t + 1.6;
+      g.setAttribute("opacity", show ? 1 : 0);
+      g.classList.toggle("sent", sending && show);
+      setPill(g.pill, sending ? sentLabel : ctxLabel, sending, 528);
+    });
+
+    // gate
+    const lastFinal = L.lines.filter((ln) => t >= ln.t + 1.6).pop();
+    const gp = $("gatePill");
+    if (!lastFinal || t >= 16.8) { gp.setAttribute("opacity", 0); }
+    else { gp.setAttribute("opacity", 1); setPill(gp, lastFinal.wake ? L.yes : L.no, lastFinal.wake); }
+
+    // window -> Claude, Claude -> HubSpot and back
+    const pk = $("pk"), pk2 = $("pk2");
+    if (within(t, 8.8, 9.4)) { const p = ease(prog(t, 8.8, 9.4)); pk.setAttribute("cx", 960); pk.setAttribute("cy", 380 + p * 90); pk.setAttribute("opacity", 1); }
+    else pk.setAttribute("opacity", 0);
+    if (within(t, 9.5, 9.9)) { const p = ease(prog(t, 9.5, 9.9)); pk2.setAttribute("cx", 1040 + p * 50); pk2.setAttribute("cy", 502); pk2.setAttribute("opacity", 1); }
+    else if (within(t, 9.9, 10.3)) { const p = ease(prog(t, 9.9, 10.3)); pk2.setAttribute("cx", 1090 - p * 50); pk2.setAttribute("cy", 502); pk2.setAttribute("opacity", 1); }
+    else pk2.setAttribute("opacity", 0);
+    $("bClaude").classList.toggle("on", within(t, 9.2, 11.2));
+    $("bHub").classList.toggle("on", within(t, 9.8, 10.2));
+  }
+
+  let t = qs.has("t") ? parseFloat(qs.get("t")) : 0;
+  let playing = !qs.has("t") && !qs.has("rec");
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches && !qs.has("t")) { t = 13; playing = false; }
+  const btn = $("play");
+  const btnLabel = () => { btn.textContent = playing ? (lang === "es" ? "■ Detener" : "■ Stop") : (lang === "es" ? "▶ Reproducir" : "▶ Play"); };
+  btn.addEventListener("click", () => { playing = !playing; btnLabel(); });
+  let last = null;
+  function tick(now) { if (playing) { if (last != null) t = (t + (now - last) / 1000) % LOOP; render(t); } last = now; requestAnimationFrame(tick); }
+  window.__seek = (x) => { t = x; render(t); };
+  window.__LOOP = LOOP;
+  btnLabel();
+  const start = () => { render(t); requestAnimationFrame(tick); };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(start); else start();
+})();
+</script>

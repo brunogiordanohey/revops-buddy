@@ -1,0 +1,365 @@
+<title>Angels Pipeline</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one 16:9 schematic stage, two lanes (2025 above, 2026 below), recorded as video for the post. Single deliberate light "schematic paper" look. */
+:root {
+  --paper: #eef1f5;
+  --ink: #16202e;
+  --muted: #6b7686;
+  --rule: #c9d1dc;
+  --old: #8a93a1;        /* 2025 lane */
+  --live: #2747d6;       /* 2026 lane, data */
+  --voice: #e0861a;      /* audio / voice */
+  --node: #ffffff;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+html, body { background: var(--paper); color: var(--ink); }
+body { margin: 0; font-family: var(--font-sans); padding-block: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.stage { max-width: 1280px; margin: 0 auto; }
+body.rec { padding: 0; }
+body.rec .stage { max-width: none; width: 1280px; }
+body.rec .controls { display: none; }
+svg { display: block; width: 100%; height: auto; }
+text { font-family: var(--font-sans); fill: var(--ink); }
+.mono { font-family: var(--font-mono); }
+.eyebrow { font-family: var(--font-mono); font-size: 13px; letter-spacing: .12em; font-weight: 600; }
+.lane-title { font-size: 22px; font-weight: 600; }
+.lane-sub { font-size: 14px; fill: var(--muted); }
+.node rect.box { fill: var(--node); stroke: var(--rule); stroke-width: 1.5; transition: stroke .2s; }
+.node .name { font-size: 15px; font-weight: 600; text-anchor: middle; }
+.node .tech { font-family: var(--font-mono); font-size: 11.5px; fill: var(--muted); text-anchor: middle; }
+.node.on rect.box { stroke-width: 2.5; }
+.lane-old .node.on rect.box { stroke: var(--ink); }
+.lane-new .node.on rect.box { stroke: var(--live); }
+.wire { fill: none; stroke: var(--rule); stroke-width: 2; }
+.wire.dash { stroke-dasharray: 4 5; }
+.lane { transition: opacity .4s; }
+.lane.dim { opacity: .32; }
+.pk-data { fill: var(--live); }
+.pk-voice { fill: var(--voice); }
+.pk-old { fill: var(--ink); }
+.label-chip rect { fill: var(--ink); }
+.label-chip text { fill: var(--paper); font-family: var(--font-mono); font-size: 12px; }
+.bubble rect { fill: var(--node); stroke: var(--voice); stroke-width: 2; }
+.bubble text { font-size: 13.5px; }
+.tx text { font-family: var(--font-mono); font-size: 12.5px; }
+.tx .who { font-weight: 600; }
+.hl { fill: var(--voice); font-weight: 600; }
+.note { font-family: var(--font-mono); font-size: 11.5px; fill: var(--muted); }
+.controls { display: flex; justify-content: flex-end; gap: 8px; align-items: center; margin-top: 10px; font: 13px var(--font-mono); color: var(--muted); flex-wrap: wrap; }
+.controls button { font: inherit; color: var(--ink); background: var(--node); border: 1px solid var(--rule); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.controls button:focus-visible { outline: 2px solid var(--live); outline-offset: 2px; }
+</style>
+
+<div class="stage">
+<svg id="s" viewBox="0 0 1280 720" role="img" aria-labelledby="svgTitle">
+  <title id="svgTitle"></title>
+  <!-- header -->
+  <text x="40" y="52" class="eyebrow" fill="#6b7686" data-i="eyebrow"></text>
+  <text x="1240" y="52" class="eyebrow mono" text-anchor="end" fill="#6b7686" id="clock">00.0 s</text>
+  <line x1="40" x2="1240" y1="70" y2="70" stroke="#c9d1dc" />
+
+  <!-- ===== LANE 2025 ===== -->
+  <g id="laneOld" class="lane lane-old">
+    <text x="40" y="108" class="eyebrow" fill="#8a93a1" data-i="oldEyebrow"></text>
+    <text x="40" y="134" class="lane-title" data-i="oldTitle"></text>
+    <text x="40" y="156" class="lane-sub" data-i="oldSub"></text>
+
+    <path id="wO1" class="wire" d="M 255 230 L 375 230" />
+    <path id="wO2" class="wire" d="M 545 230 L 665 230" />
+    <path id="wO3" class="wire dash" d="M 750 265 L 750 300" />
+    <path id="wO4" class="wire" d="M 835 230 L 955 230" />
+
+    <g class="node" id="nMic" transform="translate(85 195)"><rect class="box" width="170" height="70" rx="8"/>
+      <text class="name" x="85" y="30" data-i="mic"></text><text class="tech" x="85" y="50" data-i="micTech"></text>
+      <rect id="recBar" x="12" y="60" width="0" height="4" rx="2" fill="#16202e"/></g>
+    <g class="node" id="nWhisper" transform="translate(375 195)"><rect class="box" width="170" height="70" rx="8"/>
+      <text class="name" x="85" y="30">Whisper</text><text class="tech" x="85" y="50">base.en · local</text></g>
+    <g class="node" id="nAgent" transform="translate(665 195)"><rect class="box" width="170" height="70" rx="8"/>
+      <text class="name" x="85" y="30">smolagents</text><text class="tech" x="85" y="50">Llama 3.1 8B · Groq</text></g>
+    <g class="node" id="nCsv" transform="translate(690 300)"><rect class="box" width="120" height="40" rx="6"/>
+      <text class="tech" x="60" y="25" style="fill:#16202e" data-i="csv"></text></g>
+    <g class="node" id="nSay" transform="translate(955 195)"><rect class="box" width="170" height="70" rx="8"/>
+      <text class="name" x="85" y="30" data-i="say"></text><text class="tech" x="85" y="50">macOS say</text></g>
+
+    <g id="chipOld" class="label-chip" opacity="0"><rect x="0" y="0" width="10" height="22" rx="4"/><text x="8" y="15"></text></g>
+    <g id="bubbleOld" class="bubble" opacity="0" transform="translate(955 288)"><rect width="285" height="34" rx="8"/><text x="12" y="22" data-i="oldAnswer"></text></g>
+    <circle id="pkOld" class="pk-old" r="7" opacity="0"/>
+  </g>
+
+  <line x1="40" x2="1240" y1="372" y2="372" stroke="#c9d1dc" stroke-dasharray="2 6" />
+
+  <!-- ===== LANE 2026 ===== -->
+  <g id="laneNew" class="lane lane-new">
+    <text x="40" y="408" class="eyebrow" fill="#2747d6" data-i="newEyebrow"></text>
+    <text x="40" y="434" class="lane-title" data-i="newTitle"></text>
+    <text x="40" y="456" class="lane-sub" data-i="newSub"></text>
+
+    <!-- transcript / call context -->
+    <g id="ctx" transform="translate(470 388)">
+      <rect class="box" width="560" height="96" rx="8" fill="#ffffff" stroke="#c9d1dc" stroke-width="1.5" id="ctxBox"/>
+      <text x="14" y="22" class="eyebrow" style="font-size:11px" fill="#6b7686" data-i="ctxTitle"></text>
+      <g class="tx"><text id="tx1" x="14" y="50"></text><text id="tx2" x="14" y="76"></text></g>
+    </g>
+
+    <path id="wInA" class="wire" d="M 210 560 L 260 560" />
+    <path id="wInB" class="wire" d="M 400 560 L 450 560" />
+    <path id="wN3" class="wire" d="M 590 560 L 640 560" />
+    <path id="wN4" class="wire" d="M 780 560 L 830 560" />
+    <path id="wN5" class="wire" d="M 970 560 L 1020 560" />
+    <path id="wCtxUp" class="wire dash" d="M 520 525 L 520 484" />
+    <path id="wCtxDown" class="wire dash" d="M 900 484 L 900 525" />
+    <path id="wTool" class="wire dash" d="M 900 595 L 900 625" />
+    <path id="wOut" class="wire" d="M 1090 595 L 1090 690 L 140 690 L 140 595" />
+    <path id="pIn" d="M 210 560 L 520 560" fill="none" />
+    <g id="frames"></g>
+
+    <g class="node" id="nMeet" transform="translate(70 525)"><rect class="box" width="140" height="70" rx="8"/>
+      <text class="name" x="70" y="30">Google Meet</text><text class="tech" x="70" y="50" data-i="meetTech"></text>
+      <circle id="liveDot" cx="124" cy="14" r="5" fill="#e0861a"/></g>
+    <g class="node" id="nMB" transform="translate(260 525)"><rect class="box" width="140" height="70" rx="8"/>
+      <text class="name" x="70" y="30">MeetingBaas</text><text class="tech" x="70" y="50">WSS · PCM 16 kHz</text></g>
+    <g class="node" id="nDG" transform="translate(450 525)"><rect class="box" width="140" height="70" rx="8"/>
+      <text class="name" x="70" y="30">Deepgram</text><text class="tech" x="70" y="50" data-i="dgTech"></text></g>
+    <g class="node" id="nWake" transform="translate(640 525)"><rect class="box" width="140" height="70" rx="8"/>
+      <text class="name" x="70" y="30" data-i="wake"></text><text class="tech" x="70" y="50" data-i="wakeTech"></text></g>
+    <g class="node" id="nClaude" transform="translate(830 525)"><rect class="box" width="140" height="70" rx="8"/>
+      <text class="name" x="70" y="30">Claude</text><text class="tech" x="70" y="50" data-i="claudeTech"></text></g>
+    <g class="node" id="nHub" transform="translate(840 625)"><rect class="box" width="120" height="40" rx="6"/>
+      <text class="tech" x="60" y="25" style="fill:#16202e">HubSpot CRM</text></g>
+    <g class="node" id="nEL" transform="translate(1020 525)"><rect class="box" width="140" height="70" rx="8"/>
+      <text class="name" x="70" y="30">ElevenLabs</text><text class="tech" x="70" y="50">Flash v2.5</text></g>
+
+    <text x="1160" y="512" class="note" text-anchor="end" data-i="latency"></text>
+    <text x="615" y="684" class="note" text-anchor="middle" data-i="returnNote"></text>
+
+    <g id="chipNew" class="label-chip" opacity="0"><rect x="0" y="0" width="10" height="22" rx="4"/><text x="8" y="15"></text></g>
+    <g id="bubbleNew" class="bubble" opacity="0" transform="translate(40 470)"><rect width="10" height="34" rx="8"/><text x="12" y="22" data-i="newAnswer"></text></g>
+    <g id="voicePk"></g>
+    <g id="tokPk"></g>
+    <circle id="pkTool" class="pk-data" r="6" opacity="0"/>
+    <circle id="pkCtx" class="pk-data" r="6" opacity="0"/>
+  </g>
+</svg>
+<div class="controls"><button id="play" type="button"></button></div>
+</div>
+
+<script>
+(function () {
+  const T = {
+    es: {
+      title: "De RevOps Buddy a Angels: 2025 y 2026",
+      eyebrow: "ANGELS · CÓMO FUNCIONA",
+      oldEyebrow: "2025 · REVOPS BUDDY, EN MI PORTÁTIL",
+      oldTitle: "Por turnos",
+      oldSub: "Grabas 5 s, esperas, responde. Una persona, un CSV.",
+      mic: "Micrófono", micTech: "graba 5 s",
+      csv: "pipeline.csv", say: "Voz del Mac",
+      oldAnswer: "“El pipeline de EMEA suma 261.500 $”",
+      newEyebrow: "2026 · ANGELS, DENTRO DE LA LLAMADA",
+      newTitle: "Escucha siempre",
+      newSub: "Habla cuando le llaman, con el contexto de la llamada.",
+      ctxTitle: "CONTEXTO DE LA LLAMADA",
+      tx1who: "Laura:", tx1: " Acme pide otra demo antes de firmar.",
+      tx2who: "Marc:", tx2a: " ", tx2wake: "Angels", tx2b: ", ¿en qué etapa está Acme?",
+      meetTech: "pipeline review", dgTech: "STT en streaming",
+      wake: "“Angels”", wakeTech: "palabra clave",
+      claudeTech: "tools + contexto",
+      tool: "get_deal(\"Acme\")", toolBack: "Negociación · 48.000 €",
+      newAnswer: "“Acme está en negociación, unos 48.000 €. Piden otra demo.”",
+      latency: "Claude, primer texto: p50 2,1 s",
+      returnNote: "la voz vuelve a la llamada por un segundo WebSocket",
+      recTech: "grabando…"
+    },
+    en: {
+      title: "From RevOps Buddy to Angels: 2025 and 2026",
+      eyebrow: "ANGELS · HOW IT WORKS",
+      oldEyebrow: "2025 · REVOPS BUDDY, ON MY LAPTOP",
+      oldTitle: "Turn by turn",
+      oldSub: "Record 5 s, wait, it answers. One person, one CSV.",
+      mic: "Microphone", micTech: "records 5 s",
+      csv: "pipeline.csv", say: "Mac voice",
+      oldAnswer: "“EMEA pipeline totals $261,500”",
+      newEyebrow: "2026 · ANGELS, INSIDE THE CALL",
+      newTitle: "Always listening",
+      newSub: "Speaks when called on, with the call's context.",
+      ctxTitle: "CALL CONTEXT",
+      tx1who: "Laura:", tx1: " Acme wants another demo before signing.",
+      tx2who: "Marc:", tx2a: " ", tx2wake: "Angels", tx2b: ", what stage is Acme in?",
+      meetTech: "pipeline review", dgTech: "streaming STT",
+      wake: "“Angels”", wakeTech: "wake word",
+      claudeTech: "tools + context",
+      tool: "get_deal(\"Acme\")", toolBack: "Negotiation · €48,000",
+      newAnswer: "“Acme is in negotiation, about €48,000. They want another demo.”",
+      latency: "Claude, first text: p50 2.1 s",
+      returnNote: "the voice goes back into the call over a second WebSocket",
+      recTech: "recording…"
+    }
+  };
+  const qs = new URLSearchParams(location.search);
+  let lang = qs.get("lang") === "en" ? "en" : "es";
+  if (qs.has("rec")) document.body.classList.add("rec");
+  const LOOP = 17;
+  const $ = (id) => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const L = () => T[lang];
+
+  function applyLang() {
+    document.querySelectorAll("[data-i]").forEach((el) => { el.textContent = L()[el.dataset.i]; });
+    $("svgTitle").textContent = L().title;
+    sizeBubble($("bubbleOld"), 0); sizeBubble($("bubbleNew"), 0);
+  }
+  function sizeBubble(g) {
+    const t = g.querySelector("text"), r = g.querySelector("rect");
+    try { r.setAttribute("width", t.getComputedTextLength() + 24); } catch (e) {}
+  }
+
+  // helpers
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const prog = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+  const ease = (p) => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+  const within = (t, a, b) => t >= a && t < b;
+  function along(pathEl, p) { const len = pathEl.getTotalLength(); return pathEl.getPointAtLength(len * p); }
+  function place(el, pt, show) { el.setAttribute("cx", pt.x); el.setAttribute("cy", pt.y); el.setAttribute("opacity", show ? 1 : 0); }
+  function pathPacket(el, pathEl, t, a, b, reverse) {
+    if (!within(t, a, b)) { el.setAttribute("opacity", 0); return; }
+    let p = ease(prog(t, a, b)); if (reverse) p = 1 - p;
+    place(el, along(pathEl, p), true);
+  }
+  function seg(x1, y1, x2, y2) { const p = document.createElementNS(NS, "path"); p.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`); return p; }
+  // Off-DOM paths can't measure in all browsers, so mount hidden helpers.
+  const helpers = document.createElementNS(NS, "g"); helpers.setAttribute("visibility", "hidden"); $("s").appendChild(helpers);
+  function mk(d) { const p = seg(0,0,0,0); p.setAttribute("d", d); helpers.appendChild(p); return p; }
+  const P = {
+    o1: mk("M 255 230 L 375 230"), o2: mk("M 545 230 L 665 230"), o3: mk("M 750 265 L 750 300"), o4: mk("M 835 230 L 955 230"),
+    inp: mk("M 140 560 L 520 560"), ctxDown: mk("M 900 484 L 900 545"), tool: mk("M 900 580 L 900 645"),
+    n4: mk("M 780 560 L 830 560"), n5: mk("M 935 560 L 1090 560"), out: mk("M 1090 595 L 1090 690 L 140 690 L 140 595"),
+    ctxUp: mk("M 520 540 L 520 484")
+  };
+
+  function chip(g, text, x, y, show) {
+    g.setAttribute("opacity", show ? 1 : 0); if (!show) return;
+    const t = g.querySelector("text"); t.textContent = text;
+    let w = 0; try { w = t.getComputedTextLength(); } catch (e) {}
+    g.querySelector("rect").setAttribute("width", w + 16);
+    g.setAttribute("transform", `translate(${x - (w + 16) / 2} ${y})`);
+  }
+  function setOn(id, on) { $(id).classList.toggle("on", !!on); }
+  function typeText(el, parts, t, a, cps) {
+    // parts: [{s, cls}] ; reveals characters progressively from time a
+    while (el.firstChild) el.removeChild(el.firstChild);
+    if (t < a) return;
+    let n = Math.floor((t - a) * cps);
+    for (const part of parts) {
+      if (n <= 0) break;
+      const ts = document.createElementNS(NS, "tspan");
+      ts.textContent = part.s.slice(0, n); if (part.cls) ts.setAttribute("class", part.cls);
+      el.appendChild(ts); n -= part.s.length;
+    }
+  }
+
+  // frame pool (streaming audio in)
+  const framePool = Array.from({ length: 14 }, () => { const r = document.createElementNS(NS, "rect"); r.setAttribute("width", 6); r.setAttribute("height", 12); r.setAttribute("rx", 1.5); r.setAttribute("class", "pk-voice"); $("frames").appendChild(r); return r; });
+  const voicePool = Array.from({ length: 8 }, () => { const c = document.createElementNS(NS, "circle"); c.setAttribute("r", 5); c.setAttribute("class", "pk-voice"); $("voicePk").appendChild(c); return c; });
+  const tokPool = Array.from({ length: 6 }, () => { const c = document.createElementNS(NS, "circle"); c.setAttribute("r", 4); c.setAttribute("class", "pk-data"); $("tokPk").appendChild(c); return c; });
+
+  function render(t) {
+    const l = L();
+    $("clock").textContent = t.toFixed(1).padStart(4, "0") + " s";
+    const oldActive = t < 6;
+    $("laneOld").classList.toggle("dim", !oldActive);
+    $("laneNew").classList.toggle("dim", oldActive);
+
+    // ---- 2025: record -> whisper -> agent <-> csv -> say
+    setOn("nMic", within(t, 0.3, 2.6));
+    $("recBar").setAttribute("width", 146 * prog(t, 0.3, 2.6) * (t < 2.6 ? 1 : 0));
+    $("nMic").querySelector(".tech").textContent = within(t, 0.3, 2.6) ? l.recTech : l.micTech;
+    setOn("nWhisper", within(t, 2.9, 3.4));
+    setOn("nAgent", within(t, 3.6, 4.9));
+    setOn("nCsv", within(t, 3.9, 4.5));
+    setOn("nSay", within(t, 5.0, 6.0));
+    const pk = $("pkOld");
+    if (within(t, 2.6, 2.9)) pathPacket(pk, P.o1, t, 2.6, 2.9);
+    else if (within(t, 3.4, 3.6)) pathPacket(pk, P.o2, t, 3.4, 3.6);
+    else if (within(t, 3.7, 3.9)) pathPacket(pk, P.o3, t, 3.7, 3.9);
+    else if (within(t, 4.5, 4.7)) pathPacket(pk, P.o3, t, 4.5, 4.7, true);
+    else if (within(t, 4.75, 5.0)) pathPacket(pk, P.o4, t, 4.75, 5.0);
+    else pk.setAttribute("opacity", 0);
+    chip($("chipOld"), "df.groupby('region')…", 750, 168, within(t, 3.6, 4.6));
+    $("bubbleOld").setAttribute("opacity", within(t, 5.0, 6.0) ? 1 : 0);
+
+    // ---- 2026
+    const nt = t; // absolute time
+    // streaming audio frames every 0.22 s from 6.0 onward, each travels 1.1 s
+    const spawn0 = 6.0, every = 0.22, travel = 1.1;
+    let fi = 0;
+    for (let k = Math.max(0, Math.floor((nt - spawn0 - travel) / every)); fi < framePool.length; k++) {
+      const s = spawn0 + k * every; if (s > nt) break;
+      const p = (nt - s) / travel; if (p >= 1) continue;
+      const pt = along(P.inp, p);
+      const r = framePool[fi++]; r.setAttribute("x", pt.x - 3); r.setAttribute("y", pt.y - 6 + Math.sin(k * 1.7) * 4); r.setAttribute("opacity", nt >= 6 ? 0.9 : 0);
+    }
+    for (; fi < framePool.length; fi++) framePool[fi].setAttribute("opacity", 0);
+
+    $("liveDot").setAttribute("opacity", nt >= 6 ? (0.4 + 0.6 * (Math.sin(nt * 5) > 0 ? 1 : 0.3)) : 0);
+    setOn("nMeet", nt >= 6); setOn("nMB", nt >= 6.3); setOn("nDG", nt >= 6.6);
+
+    typeText($("tx1"), [{ s: l.tx1who, cls: "who" }, { s: l.tx1 }], nt, 6.8, 38);
+    typeText($("tx2"), [{ s: l.tx2who, cls: "who" }, { s: l.tx2a }, { s: l.tx2wake, cls: "hl" }, { s: l.tx2b }], nt, 8.2, 38);
+    $("ctxBox").setAttribute("stroke", nt >= 6.8 && nt < 16 ? "#2747d6" : "#c9d1dc");
+    pathPacket($("pkCtx"), P.ctxUp, nt, 7.0, 7.4);
+
+    setOn("nWake", within(nt, 8.65, 9.6));
+    $("nWake").querySelector("rect.box").style.stroke = within(nt, 8.65, 9.6) ? "var(--voice)" : "";
+    // wake -> claude, context -> claude
+    setOn("nClaude", within(nt, 9.3, 12.2));
+    if (within(nt, 9.3, 9.8)) pathPacket($("pkTool"), P.n4, nt, 9.3, 9.6);
+    else if (within(nt, 9.6, 10.1)) pathPacket($("pkTool"), P.ctxDown, nt, 9.6, 10.1);
+    else if (within(nt, 10.3, 10.8)) pathPacket($("pkTool"), P.tool, nt, 10.3, 10.8);
+    else if (within(nt, 11.1, 11.6)) pathPacket($("pkTool"), P.tool, nt, 11.1, 11.6, true);
+    else $("pkTool").setAttribute("opacity", 0);
+    setOn("nHub", within(nt, 10.7, 11.2));
+    chip($("chipNew"), l.tool, 760, 634, within(nt, 10.2, 10.9));
+    if (within(nt, 10.9, 11.7)) chip($("chipNew"), l.toolBack, 760, 634, true);
+
+    // claude streams tokens to ElevenLabs
+    for (let i = 0; i < tokPool.length; i++) {
+      const a = 11.7 + i * 0.12; const c = tokPool[i];
+      if (within(nt, a, a + 0.45)) place(c, along(P.n5, prog(nt, a, a + 0.45)), true); else c.setAttribute("opacity", 0);
+    }
+    setOn("nEL", within(nt, 11.9, 13.4));
+    // voice back to meet
+    for (let i = 0; i < voicePool.length; i++) {
+      const a = 12.3 + i * 0.13; const c = voicePool[i];
+      if (within(nt, a, a + 1.1)) place(c, along(P.out, prog(nt, a, a + 1.1)), true); else c.setAttribute("opacity", 0);
+    }
+    const bOn = within(nt, 13.6, 16.6);
+    const b = $("bubbleNew"); b.setAttribute("opacity", bOn ? 1 : 0);
+    b.setAttribute("transform", "translate(70 488)");
+    if (bOn) setOn("nMeet", true);
+  }
+
+  // playback
+  let t = qs.has("t") ? parseFloat(qs.get("t")) : 0;
+  let playing = !qs.has("t") && !qs.has("rec");
+  const reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced && !qs.has("t")) { t = 14.5; playing = false; }
+  let last = null;
+  function tick(now) {
+    if (playing) { if (last != null) t = (t + (now - last) / 1000) % LOOP; render(t); }
+    last = now; requestAnimationFrame(tick);
+  }
+  const btnLabel = () => { $("play").textContent = playing ? (lang === "es" ? "■ Detener" : "■ Stop") : (lang === "es" ? "▶ Reproducir" : "▶ Play"); };
+  $("play").addEventListener("click", () => { playing = !playing; btnLabel(); });
+  window.__seek = (x) => { t = x; render(t); };
+  window.__LOOP = LOOP;
+  btnLabel();
+  const start = () => { applyLang(); render(t); requestAnimationFrame(tick); };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(start); else start();
+})();
+</script>
