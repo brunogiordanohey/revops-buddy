@@ -1,6 +1,12 @@
 # RevOps Buddy v2
 
+[![tests](https://github.com/brunogiordanohey/revops-buddy/actions/workflows/tests.yml/badge.svg)](https://github.com/brunogiordanohey/revops-buddy/actions/workflows/tests.yml)
+
 An AI RevOps teammate that joins your Google Meet sales calls, listens to the whole conversation, and answers pipeline questions out loud when someone calls it by name: **"Angels, what's left to close Acme?"**
+
+[![A 72-second recorded Google Meet call with the bot (click to watch, sound on)](docs/demo.jpg)](https://www.brugiordano.com/one-year-later-voice-agent-joins-the-call/)
+
+*A real 72-second call (sound on), embedded in the blog post. It was recorded with the private version, which can also post deal links in the meeting chat and update deals. This repo is read-only.*
 
 > RevOps Buddy v1 (2025) was a local push-to-talk prototype (Whisper + Llama on Groq + a CSV). It lives at the [`v1` tag](https://github.com/brunogiordanohey/revops-buddy/tree/v1). In v2 the bot joins real calls and answers to **"Angels"**.
 
@@ -82,7 +88,7 @@ With `DATA_MODE=synthetic` (the default) it answers from a bundled demo company,
 .venv/bin/python -m pytest -q
 ```
 
-All tests run offline with fake providers.
+All tests run offline with fake providers. CI runs them on Python 3.11 to 3.14 for every push and pull request.
 
 ## License
 
